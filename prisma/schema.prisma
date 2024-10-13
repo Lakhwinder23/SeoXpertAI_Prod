@@ -126,13 +126,11 @@ model Task {
 }
 
 model Audit {
-  id          String    @id @default(uuid())
+  id          String   @id @default(uuid())
   projectId   String
-  auditDate   DateTime  @default(now())
   seoScore    Int
   performance Int
-
-  // Relationships
+  auditDate   DateTime @default(now())
   project     Project   @relation(fields: [projectId], references: [id])
 }
 

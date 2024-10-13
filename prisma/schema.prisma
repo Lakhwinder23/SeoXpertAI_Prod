@@ -7,51 +7,78 @@ datasource db {
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
-
-model user {
-  id                Int      @id @default(autoincrement())
-  created_time      DateTime @default(now())
-  email             String   @unique
-  first_name        String?
-  last_name         String?
+model User {
+  id                Int       @id @default(autoincrement())
+  createdAt         DateTime  @default(now())
+  email             String    @unique
+  firstName         String?
+  lastName          String?
   gender            String?
-  profile_image_url String?
-  user_id           String   @unique
+  profileImageUrl   String?
+  userId            String    @unique
   subscription      String?
+  
+  // Relationships
+  projects          TeamMember[]
+  tasks             Task[]
+  payments          Payment[]      // Back-reference to Payment
+  subscriptions     Subscription[] // Back-reference to Subscription
+
+  Invoice Invoice[]
 }
 
-model payments {
+model Payment {
   id               Int      @id @default(autoincrement())
-  created_time     DateTime @default(now())
-  stripe_id        String
+  createdAt        DateTime @default(now())
+  stripeId         String
   email            String
   amount           String
-  payment_time     String
-  payment_date     String
+  paymentTime      String
+  paymentDate      String
   currency         String
-  user_id          String
-  customer_details String
-  payment_intent   String
+  userId           Int?     // Ensure this is an Int to match User id
+
+  // Optional relation to User
+  user             User?    @relation(fields: [userId], references: [id])
 }
 
-model subscriptions {
+model Subscription {
   id                        Int      @id @default(autoincrement())
-  created_time              DateTime @default(now())
-  subscription_id           String
-  stripe_user_id            String
+  createdAt                 DateTime @default(now())
+  subscriptionId            String
+  stripeUserId              String
   status                    String
-  start_date                String
-  end_date                  String?
-  plan_id                   String
-  default_payment_method_id String?
+  startDate                 String
+  endDate                   String?
+  planId                    String
+  defaultPaymentMethodId     String?
   email                     String
-  user_id                   String
+  userId                    Int?     // Ensure this is an Int to match User id
+
+  // Optional relation to User
+  user                      User?    @relation(fields: [userId], references: [id])
 }
 
-model subscriptions_plans {
+
+model Invoice {
+  id              Int      @id @default(autoincrement())
+  createdAt       DateTime @default(now())
+  invoiceId       String
+  subscriptionId  String
+  amountPaid      String
+  amountDue       String?
+  currency        String
+  status          String
+  email           String
+  userId          Int?
+  // Optional relation to User
+  user            User?    @relation(fields: [userId], references: [id])
+}
+
+model SubscriptionPlan {
   id           Int      @id @default(autoincrement())
-  created_time DateTime @default(now())
-  plan_id      String
+  createdAt    DateTime @default(now())
+  planId       String
   name         String
   description  String
   amount       String
@@ -59,15 +86,64 @@ model subscriptions_plans {
   interval     String
 }
 
-model invoices {
-  id              Int      @id @default(autoincrement())
-  created_time    DateTime @default(now())
-  invoice_id      String
-  subscription_id String
-  amount_paid     String
-  amount_due      String?
-  currency        String
-  status          String
-  email           String
-  user_id         String?
+
+model Project {
+  id          String        @id @default(uuid())
+  name        String
+  description String?
+  websiteUrl  String    // New field for the project's website URL
+  createdAt   DateTime       @default(now())
+
+  // Relationships
+  teamMembers TeamMember[]
+  audits      Audit[]
+  tasks       Task[]
+}
+
+model TeamMember {
+  id        String    @id @default(uuid())
+  userId    Int
+  projectId String
+  role      Role
+
+  // Relationships
+  user      User      @relation(fields: [userId], references: [id])
+  project   Project   @relation(fields: [projectId], references: [id])
+}
+
+model Task {
+  id          String    @id @default(uuid())
+  projectId   String
+  userId      Int
+  name        String
+  description String?
+  dueDate     DateTime?
+  status      TaskStatus @default(Pending)
+
+  // Relationships
+  project     Project   @relation(fields: [projectId], references: [id])
+  user        User      @relation(fields: [userId], references: [id])
+}
+
+model Audit {
+  id          String    @id @default(uuid())
+  projectId   String
+  auditDate   DateTime  @default(now())
+  seoScore    Int
+  performance Int
+
+  // Relationships
+  project     Project   @relation(fields: [projectId], references: [id])
+}
+
+enum Role {
+  Admin
+  Manager
+  Viewer
+}
+
+enum TaskStatus {
+  Pending
+  InProgress
+  Completed
 }

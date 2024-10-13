@@ -68,3 +68,8 @@ export const isAuthorized = async (
     };
   }
 };
+
+export function isAuthorized(userRole: string, requiredRole: string) {
+  const roles = ['Viewer', 'Manager', 'Admin'];
+  return roles.indexOf(userRole) >= roles.indexOf(requiredRole);
+}

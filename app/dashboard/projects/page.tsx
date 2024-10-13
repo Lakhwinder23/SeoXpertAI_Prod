@@ -4,56 +4,87 @@ import { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button'; // Assuming you have a Button component
+// Correct import for a named export
+// Correct import for a default export
+import ProjectDashboard from '@/components/ProjectDashboard'; // Default export, no curly braces
+import AuditComponent from '@/components/audit/AuditComponent';
+import ReportComponent from '@/components/reports/ReportComponent';
+import NotificationComponent from '@/components/notifications/NotificationComponent';
+import SEOStrategyComponent from '@/components/seoStrategy/SEOStrategyComponent';
+import DashboardPage from '@/components/dashboard/DashboardPage'; 
+
+
+
+
 
 const ProjectPage = () => {
   const [projects, setProjects] = useState([]); // Array to hold projects
   const [newProject, setNewProject] = useState({ name: '', description: '', websiteUrl: '' }); // Include website URL
   const [error, setError] = useState(null); // To store errors if any occur
+  const [selectedProject, setSelectedProject] = useState(null); // Store selected project
 
   // Fetch the projects when the component mounts
   useEffect(() => {
-    fetch('/api/projects')
-      .then((res) => res.json())
-      .then((data) => {
-        console.log('Projects data:', data); // Log for debugging
-        if (data.error) {
-          console.error('Error fetching projects:', data.error);
-          setError(data.error); // Set error if an issue occurred
-          setProjects([]); // Fallback to empty array
-        } else {
-          setProjects(data.projects || []); // Ensure projects is an array
-        }
-      })
-      .catch((error) => {
-        console.error('Fetch error:', error); // Log fetch error
-        setError('Failed to load projects'); // Set a user-friendly error message
+    fetchProjects();
+  }, []);
+
+  const fetchProjects = async () => {
+    try {
+      const res = await fetch('/api/projects');
+      const data = await res.json();
+      console.log('Projects data:', data); // Log for debugging
+      if (data.error) {
+        console.error('Error fetching projects:', data.error);
+        setError(data.error);
         setProjects([]); // Fallback to empty array
-      });
+      } else {
+        setProjects(data.projects || []);
+      }
+    } catch (error) {
+      console.error('Fetch error:', error); // Log fetch error
+      setError('Failed to load projects');
+      setProjects([]); // Fallback to empty array
+    }
+  };
+
+  useEffect(() => {
+    // Mock fetching selected project data (will be connected to backend later)
+    const mockProject = {
+      id: '1',
+      name: 'My Project',
+      websiteUrl: 'https://example.com',
+    };
+    setSelectedProject(mockProject);
   }, []);
 
   // Function to handle project creation
   const createProject = async () => {
     if (!newProject.name || !newProject.websiteUrl) {
-      setError('Project name and website URL are required'); // Ensure both fields are filled
+      setError('Project name and website URL are required');
       return;
     }
 
-    const response = await fetch('/api/projects', {
-      method: 'POST',
-      body: JSON.stringify(newProject),
-      headers: { 'Content-Type': 'application/json' },
-    });
-    
-    const data = await response.json();
-    console.log('Response from server:', data); // Log server response
+    try {
+      const response = await fetch('/api/projects', {
+        method: 'POST',
+        body: JSON.stringify(newProject),
+        headers: { 'Content-Type': 'application/json' },
+      });
 
-    if (response.ok) {
-      setProjects([...projects, data.project]); // Add new project to list
-      setNewProject({ name: '', description: '', websiteUrl: '' }); // Reset form fields
-      setError(null); // Clear error
-    } else {
-      console.error('Error creating project:', data.error); // Handle errors
-      setError(data.error || 'Error creating project'); // Set error state
+      const data = await response.json();
+      console.log('Response from server:', data); // Log server response
+
+      if (response.ok) {
+        setProjects([...projects, data.project]);
+        setNewProject({ name: '', description: '', websiteUrl: '' }); // Reset form fields
+        setError(null); // Clear error
+      } else {
+        console.error('Error creating project:', data.error);
+        setError(data.error || 'Error creating project');
+      }
+    } catch (error) {
+      console.error('Error with project creation:', error);
+      setError('Failed to create project');
     }
   };
 
@@ -98,14 +129,47 @@ const ProjectPage = () => {
             <div key={project.id} className="bg-white p-4 rounded-lg shadow-md mb-4">
               <h2 className="text-2xl font-semibold">{project.name || 'Unnamed Project'}</h2> {/* Fallback if name is missing */}
               <p className="text-gray-700">{project.description || 'No description'}</p> {/* Fallback if description is missing */}
-              <p className="text-blue-500"><a href={project.websiteUrl} target="_blank" rel="noopener noreferrer">{project.websiteUrl}</a></p> {/* Display the website URL */}
-              <div>
-                {/* Team management goes here */}
-              </div>
+              <p className="text-blue-500">
+                <a href={project.websiteUrl} target="_blank" rel="noopener noreferrer">
+                  {project.websiteUrl}
+                </a>
+              </p> {/* Display the website URL */}
             </div>
           )
         ))}
       </div>
+
+      <div className="project-page">
+        {selectedProject ? (
+          <ProjectDashboard selectedProject={selectedProject} />
+        ) : (
+          <p>Loading project...</p>
+        )}
+      </div>
+         {/* SEO Audits Section */}
+         <section className="mb-12">
+        <h2 className="text-3xl font-semibold mb-4">SEO Audits</h2>
+        <AuditComponent />
+      </section>
+
+      {/* Reports Section */}
+      <section className="mb-12">
+        <h2 className="text-3xl font-semibold mb-4">Reports</h2>
+        <ReportComponent />
+      </section>
+
+      {/* Notifications Section */}
+      <section className="mb-12">
+        <h2 className="text-3xl font-semibold mb-4">Notifications</h2>
+        <NotificationComponent />
+      </section>
+
+      {/* SEO Strategy Section */}
+      <section className="mb-12">
+        <h2 className="text-3xl font-semibold mb-4">SEO Strategy</h2>
+        <SEOStrategyComponent />
+      </section>
+      
     </div>
   );
 };

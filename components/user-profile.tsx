@@ -16,27 +16,36 @@ import {
 import config from "@/config"
 import { SignOutButton, useUser } from "@clerk/nextjs"
 import {
-    CreditCard,
     LogOut,
     Settings,
     User
 } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { useEffect } from "react"
 
 export function UserProfile() {
-    const router = useRouter()
+    const router = useRouter();
+    const { user } = useUser(); // Always call useUser unconditionally
 
-    if (!config?.auth?.enabled) {
-        router.back()
+    // Redirect if authentication is disabled
+    useEffect(() => {
+        if (!config?.auth?.enabled) {
+            router.back();
+        }
+    }, [router]);
+
+    // Return null if the user is not available (safety check)
+    if (!user) {
+        return null;
     }
-    const { user } = useUser();
+
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild className="w-[2.25rem] h-[2.25rem]">
-                <Avatar >
+                <Avatar>
                     <AvatarImage src={user?.imageUrl} alt="User Profile" />
-                    <AvatarFallback></AvatarFallback>
+                    <AvatarFallback>{user?.firstName?.charAt(0) || "?"}</AvatarFallback>
                 </Avatar>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56">
@@ -67,5 +76,5 @@ export function UserProfile() {
                 </SignOutButton>
             </DropdownMenuContent>
         </DropdownMenu>
-    )
+    );
 }

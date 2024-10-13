@@ -1,5 +1,4 @@
 "use client"
-
 import Link from 'next/link';
 import * as React from "react";
 import { GiHamburgerMenu } from "react-icons/gi";
@@ -33,11 +32,14 @@ const components: { title: string; href: string; description: string }[] = [
 ];
 
 export default function NavBar() {
-    const { userId } = useAuth(); // Always call useAuth unconditionally
+    let userId = null;
+    if (config?.auth?.enabled) {
+        const user = useAuth();
+        userId = user?.userId;
+    }
 
     return (
         <div className="flex min-w-full fixed justify-between p-2 border-b z-10 dark:bg-black dark:bg-opacity-50 bg-white">
-            {/* Mobile view */}
             <div className="flex justify-between w-full min-[825px]:hidden">
                 <Dialog>
                     <SheetTrigger className="p-2 transition">
@@ -67,8 +69,6 @@ export default function NavBar() {
                 </Dialog>
                 <ModeToggle />
             </div>
-
-            {/* Desktop view */}
             <NavigationMenu>
                 <NavigationMenuList className="max-[825px]:hidden flex gap-3 w-[100%] justify-between">
                     <Link href="/" className="pl-2 flex items-center" aria-label="Home">
@@ -104,8 +104,6 @@ export default function NavBar() {
                     </NavigationMenuItem>
                 </NavigationMenuList>
             </NavigationMenu>
-
-            {/* Right side of navbar */}
             <div className="flex items-center gap-2 max-[825px]:hidden">
                 {userId && <UserProfile />}
                 <ModeToggle />
@@ -114,7 +112,6 @@ export default function NavBar() {
     );
 }
 
-// ListItem component for navigation links
 const ListItem = React.forwardRef<
     React.ElementRef<"a">,
     React.ComponentPropsWithoutRef<"a">
